@@ -2,11 +2,12 @@
 Date: 21/10/2021
 Author: Matteo Nunziante
 
-Description: Tip Tap Toe game
+Description: Tip Tap Toe gamed
 """
 
 import numpy as np
 from enum import Enum
+from copy import deepcopy
 SIZE = 3  # toDo: add this as a parameter in the game -> from the Menu object the user can change it (in the GUI)
 
 
@@ -48,7 +49,7 @@ class Node:
         self.data = data
         # Initialize the predecessor and the successor
         self.predecessor = predecessor
-        self.successor = None
+        self.successor = []
         # Initialize the h value of the node
         self.h = h
 
@@ -76,8 +77,25 @@ class GameHandler:
     def generateTree(self , node):
         """
         Method used to generate the whole tree starting from the configuration sent as parameter
+        Build the entire tree just one time, then search the configuration in the tree
         :param node: is the configuration to expand until the final configuration
         """
+        # If it's the root
+        if node.predecessor == None:
+            data = deepcopy(node.data)
+
+    def invertMatrix(self):
+        """
+        Invert the matrix to check if I' ve already considered a configuration
+        :return:
+        """
+
+    def mirrorMatrix(self):
+        """
+        Create the 'mirror' of the matrix to check if I' ve already considered a configuration
+        :return:
+        """
+
 
     def h(self , node):
         """
