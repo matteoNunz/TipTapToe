@@ -5,11 +5,16 @@ Author: Matteo Nunziante
 Description: Player for Tip Tap Toe game
 """
 import pickle
+from pathlib import Path
 
 import numpy as np
 
 
 class Player:
+    def __init__(self , name , symbol):
+        self.name = name
+        self.symbol = symbol
+
     def chooseAction(self , positions):
         pass
 
@@ -26,8 +31,7 @@ class Player:
 class ArtificialPlayer(Player):
 
     def __init__(self , name , symbol , exp_rate = 0.4):
-        self.name = name
-        self.symbol = symbol
+        super().__init__(name , symbol)
         self.states = []  # To save all positions taken
         self.states_value = {}  # State -> value
         # Epsilon-greedy method to balance between exploration and exploitation
@@ -73,15 +77,15 @@ class ArtificialPlayer(Player):
         self.states.append(state)
 
     def feedReward(self , reward):
-        # Back propagation of the reward
+        # Back propagation of the reward received during the current game
         for state in reversed(self.states):
             if self.states_value.get(state) is None:
                 self.states_value[state] = 0
             self.states_value[state] = (1 - self.lr) * self.states_value[state] \
                                        + self.lr * (reward + self.gamma * self.states_value[state])
-            #  reward = self.states_value[state]
 
     def reset(self):
+        # Reset the states of the current game
         self.states = []
 
     def savePolicy(self):
@@ -93,16 +97,18 @@ class ArtificialPlayer(Player):
 
     def loadPolicy(self , f):
         print("Loading policy...")
-        file = open(f , 'rb')
-        self.states_value = pickle.load(file)
-        file.close()
-        print("Policy loaded")
+        if Path(f).is_file():
+            file = open(f , 'rb')
+            self.states_value = pickle.load(file)
+            file.close()
+            print("Policy loaded")
+        else:
+            print("Error in uploading the policy")
 
 
 class HumanPlayer(Player):
     def __init__(self , name , symbol):
-        self.name = name
-        self.symbol = symbol
+        super().__init__(name , symbol)
 
     def chooseAction(self , positions):
         while True:
@@ -112,6 +118,7 @@ class HumanPlayer(Player):
                 if type(row) != int or type(col) != int:
                     raise Exception()
             except Exception:
+                print("Wrong format, insert again!")
                 continue
 
             action = (row , col)

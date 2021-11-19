@@ -8,8 +8,6 @@ from pathlib import Path
 
 import numpy as np
 
-from copy import deepcopy
-# toDo: add this as a parameter in the game -> from the Menu object the user can change it (in the GUI)
 from numpy.random import rand
 
 from Enumerations import CellState, GameState
@@ -172,83 +170,6 @@ class Game:
                 else:
                     # Update the active player for the next turn
                     self.updateActivePlayer()
-
-    def playForTraining(self , rounds = 100):
-        for i in range(rounds):
-            if i % 1000 == 0:
-                print("Rounds {}".format(i))
-            while not self.isEnd:
-                # Player1
-                positions = self.availablePositions()
-                player1_action = self.player1.chooseAction(positions , self.board , self.playerSymbol)
-                # Update the board state
-                self.updateState(player1_action)
-                self.showBoard()
-
-                board_hash = self.getHash()
-                self.player1.addState(board_hash)
-
-                # Check if player1 won
-                win = self.winner()
-                if win is not GameState.UNDEFINED:
-                    # Ended with player1 win or draw
-                    self.giveRewards()
-                    self.player1.reset()
-                    self.player2.reset()
-                    self.reset()
-                    break
-
-                else:
-                    # Player2
-                    positions = self.availablePositions()
-                    player2_action = self.player2.chooseAction(positions , self.board , self.playerSymbol)
-                    self.updateState(player2_action)
-                    self.showBoard()
-
-                    board_hash = self.getHash()
-                    self.player2.addState(board_hash)
-
-                    # Check if player2 won
-                    win = self.winner()
-                    if win is not GameState.UNDEFINED:
-                        # Ended with player2 win or draw
-                        self.giveRewards()
-                        self.player1.reset()
-                        self.player2.reset()
-                        self.reset()
-                        break
-
-    def playWithHuman(self):
-        while not self.isEnd:
-            # Player 1
-            positions = self.availablePositions()
-            player1_action = self.player1.chooseAction(positions, self.board, self.playerSymbol)
-            # update board state
-            self.updateState(player1_action)
-            # check board status if it is end
-            win = self.winner()
-            if win is not GameState.UNDEFINED:
-                if win == GameState.WIN:
-                    print(self.player1.name, "wins!")
-                else:
-                    print("tie!")
-                self.reset()
-                break
-
-            else:
-                # Player 2
-                positions = self.availablePositions()
-                player2_action = self.player2.chooseAction(positions)
-
-                self.updateState(player2_action)
-                win = self.winner()
-                if win is not GameState.UNDEFINED:
-                    if win == GameState.LOOSE:
-                        print(self.player2.name, "wins!")
-                    else:
-                        print("tie!")
-                    self.reset()
-                    break
 
     def showBoard(self):
         for i in range(0, BOARD_ROWS):
