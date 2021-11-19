@@ -2,148 +2,339 @@
 Date: 21/10/2021
 Author: Matteo Nunziante
 
-Description: Tip Tap Toe gamed
+Description: Tip Tap Toe game
 """
+from pathlib import Path
 
 import numpy as np
-from enum import Enum
+
 from copy import deepcopy
-SIZE = 3  # toDo: add this as a parameter in the game -> from the Menu object the user can change it (in the GUI)
+# toDo: add this as a parameter in the game -> from the Menu object the user can change it (in the GUI)
+from numpy.random import rand
+
+from Enumerations import CellState, GameState
+from Player import ArtificialPlayer, HumanPlayer
+
+BOARD_COLS = 3
+BOARD_ROWS = 3
 
 
-class CellState(Enum):
-    """
-    State of the node cell
-    O_Value -> O
-    X_Value -> X
-    """
-    O_Value = 0,
-    X_Value = 1
+class Game:
+    def __init__(self, p1, p2):
+        self.board = np.zeros((BOARD_ROWS, BOARD_COLS))
+        self.player1 = p1
+        self.player2 = p2
+        self.isEnd = False
+        self.boardHash = None
+        # Init player1 plays first
+        self.activePlayer = self.player1
 
+    def getHash(self):
+        self.boardHash = str(self.board.reshape(BOARD_COLS * BOARD_ROWS))
+        return self.boardHash
 
-class GameState(Enum):
-    """
-    State of the game
-    WIN -> if the algorithm won
-    LOOSE -> if the algorithm lose
-    NOBODY -> if the game ended but nobody won
-    UNDEFINED -> if the game is still open
-    """
-    WIN = 0,
-    LOOSE = 1,
-    NOBODY = 2,
-    UNDEFINED = 3
+    def availablePositions(self):
+        positions = []
+        for i in range(BOARD_ROWS):
+            for j in range(BOARD_COLS):
+                if self.board[i , j] == CellState.empty_Value:
+                    # Append the tuple
+                    positions.append((i , j))
+        return positions
 
+    def updateState(self , position):
+        # Add the value of the player
+        self.board[position] = int(self.activePlayer.symbol)
 
-class Node:
-    def __init__(self , data , h , predecessor = None):
+    def updateActivePlayer(self):
+        # Update the active player
+        if self.activePlayer is self.player1:
+            self.activePlayer = self.player2
+        else:
+            self.activePlayer = self.player1
+
+    def winner(self):
         """
-        Initialize the node parameter
-        :param data: is the value of the configuration
-        :param h: is the h value of that configuration
-        :param predecessor: is the predecessor of the current node
-        """
-        self.size = SIZE
-        # Create the empty configuration -> all cells are initialized to None
-        # self.node = np.empty((self.size , self.size) , dtype = State)
-        self.data = data
-        # Initialize the predecessor and the successor
-        self.predecessor = predecessor
-        self.successor = []
-        # Initialize the h value of the node
-        self.h = h
-
-    def generateTree(self):
-        """
-        Recursive function that generate a tree starting from self.data value as root
-        :return: the root of the tree
-        """
-        # toDo: maybe this method will go in GameHandler
-
-
-class GameHandler:
-    def __init__(self):
-        """
-        Initialize something
-        """
-        self.size = SIZE
-        # Initialize the root ot the tree -> the empty node
-        self.node = Node(np.empty((self.size , self.size) , dtype = CellState) , 0)
-        # Save the active player
-        self.active = False  # True if it's the turn of the algorithm, False otherwise
-        # Save the symbol of the algorithm: O or X
-        self.symbol = CellState.X_Value
-
-    def generateTree(self , node):
-        """
-        Method used to generate the whole tree starting from the configuration sent as parameter
-        Build the entire tree just one time, then search the configuration in the tree
-        :param node: is the configuration to expand until the final configuration
-        """
-        # If it's the root
-        if node.predecessor == None:
-            data = deepcopy(node.data)
-
-    def invertMatrix(self):
-        """
-        Invert the matrix to check if I' ve already considered a configuration
+        The return value are referred to the player with X_Value (player1)
         :return:
         """
+        # Rows
+        for i in range(BOARD_ROWS):
+            if sum(self.board[i , :]) == BOARD_COLS:
+                self.isEnd = True
+                return GameState.WIN
+            if sum(self.board[i , :]) == -BOARD_ROWS:
+                self.isEnd = True
+                return GameState.LOOSE
 
-    def mirrorMatrix(self):
-        """
-        Create the 'mirror' of the matrix to check if I' ve already considered a configuration
-        :return:
-        """
+        # Columns
+        for i in range(BOARD_COLS):
+            if sum(self.board[: , i]) == BOARD_COLS:
+                self.isEnd = True
+                return GameState.WIN
+            if sum(self.board[: , i]) == -BOARD_COLS:
+                self.isEnd = True
+                return GameState.LOOSE
 
+        # Diagonals
+        diag1_sum = sum([self.board[i , i] for i in range(BOARD_COLS)])
+        diag2_sum = sum([self.board[i, BOARD_COLS - i - 1] for i in range(BOARD_COLS)])
+        diag_sum_max = max(abs(diag1_sum) , abs(diag2_sum))
 
-    def h(self , node):
-        """
-        Function that given a node calculate the h function
-        :param node: is the node of which calculate the h function
-        :return: the value of h
-        """
+        if diag_sum_max == 3:
+            self.isEnd = True
+            if diag1_sum == BOARD_COLS or diag2_sum == BOARD_COLS:
+                return GameState.WIN
+            else:
+                return GameState.LOOSE
 
-    def isFinalConfiguration(self , node):
-        """
-        Method that said if a configuration is final
-        :param node: the node to analyse
-        :return: a pair of:
-                    -> True if it is final, False otherwise
-                    -> a GameState element according to the situation
-        """
+        # Tie -> no available position
+        if len(self.availablePositions()) == 0:
+            self.isEnd = True
+            return GameState.DRAW
 
-    def isWon(self , node , elementToCheck):
-        """
-        Method used to verify is someone won
-        :param node: is the node to analyse
-        :param elementToCheck: check if there is a tris of elementToCheck (CellState = O_Value pr X_Value)
-        :return: True if it won, False otherwise
-        """
+        # Not end
+        self.isEnd = False
+        return GameState.UNDEFINED
 
-    def process(self):
-        """
-        Method that handles the game interaction
-        """
-        # Random choose of the first player -> 1: X , 2: O
+    def giveRewards(self):
+        result = self.winner()
+        # Back propagate rewards
+        if result == GameState.WIN:
+            self.player1.feedReward(2)
+            self.player2.feedReward(-1)
+        elif result == GameState.LOOSE:
+            self.player1.feedReward(-5)
+            self.player2.feedReward(5)
+        else:
+            self.player1.feedReward(-0.5)
+            self.player2.feedReward(1)
 
-        # Start the loop
+    def reset(self):
+        self.board = np.zeros((BOARD_ROWS , BOARD_COLS))
+        self.boardHash = None
+        self.isEnd = False
+        self.activePlayer = self.player1
 
-        # Generate the whole tree
+    def play(self , rounds = 100):
+        if type(self.player1) == ArtificialPlayer and type(self.player2) == ArtificialPlayer:
+            # If training play
+            for i in range(rounds):
+                if i % 1000 == 0:
+                    print("Rounds {}".format(i))
+                while not self.isEnd:
+                    # Take the available positions
+                    positions = self.availablePositions()
+                    # Choose the action
+                    action = self.activePlayer.chooseAction(positions , self.board)
+                    # Update the board
+                    self.updateState(action)
+                    self.activePlayer.addState(self.getHash())
 
-        # Analyse it and chose the best action to do (In case of first player just say to put in the middle)
+                    # Check if the active player won
+                    winner = self.winner()
+                    if winner is not GameState.UNDEFINED:
+                        # The game ended with win or tie
+                        self.giveRewards()
+                        self.player1.reset()
+                        self.player2.reset()
+                        self.reset()
+                        break
+                    else:
+                        # Update the active player for the next turn
+                        self.updateActivePlayer()
+        else:
+            # If the is a humanPlayer
+            while not self.isEnd:
+                # Take the available positions
+                positions = self.availablePositions()
+                if type(self.activePlayer) == HumanPlayer:
+                    self.showBoard()
+                    action = self.activePlayer.chooseAction(positions)
+                else:
+                    action = self.activePlayer.chooseAction(positions , self.board)
+                # Update the board
+                self.updateState(action)
 
-        # Do the action
+                # Check if the active player won
+                winner = self.winner()
+                if winner is not GameState.UNDEFINED:
+                    self.showBoard()
+                    if winner is GameState.WIN:
+                        print(str(self.player1.name) + " won!")
+                    elif winner is GameState.LOOSE:
+                        print(str(self.player2.name) + " won!")
+                    else:
+                        print("Tie!")
+                    # Back propagate the reward
+                    self.giveRewards()
+                    break
+                else:
+                    # Update the active player for the next turn
+                    self.updateActivePlayer()
 
-        # Update the GUI
+    def playForTraining(self , rounds = 100):
+        for i in range(rounds):
+            if i % 1000 == 0:
+                print("Rounds {}".format(i))
+            while not self.isEnd:
+                # Player1
+                positions = self.availablePositions()
+                player1_action = self.player1.chooseAction(positions , self.board , self.playerSymbol)
+                # Update the board state
+                self.updateState(player1_action)
+                self.showBoard()
 
-        # Wait for the move of the enemy
+                board_hash = self.getHash()
+                self.player1.addState(board_hash)
 
-        # Repeat until isFinalConfiguration = False
+                # Check if player1 won
+                win = self.winner()
+                if win is not GameState.UNDEFINED:
+                    # Ended with player1 win or draw
+                    self.giveRewards()
+                    self.player1.reset()
+                    self.player2.reset()
+                    self.reset()
+                    break
+
+                else:
+                    # Player2
+                    positions = self.availablePositions()
+                    player2_action = self.player2.chooseAction(positions , self.board , self.playerSymbol)
+                    self.updateState(player2_action)
+                    self.showBoard()
+
+                    board_hash = self.getHash()
+                    self.player2.addState(board_hash)
+
+                    # Check if player2 won
+                    win = self.winner()
+                    if win is not GameState.UNDEFINED:
+                        # Ended with player2 win or draw
+                        self.giveRewards()
+                        self.player1.reset()
+                        self.player2.reset()
+                        self.reset()
+                        break
+
+    def playWithHuman(self):
+        while not self.isEnd:
+            # Player 1
+            positions = self.availablePositions()
+            player1_action = self.player1.chooseAction(positions, self.board, self.playerSymbol)
+            # update board state
+            self.updateState(player1_action)
+            # check board status if it is end
+            win = self.winner()
+            if win is not GameState.UNDEFINED:
+                if win == GameState.WIN:
+                    print(self.player1.name, "wins!")
+                else:
+                    print("tie!")
+                self.reset()
+                break
+
+            else:
+                # Player 2
+                positions = self.availablePositions()
+                player2_action = self.player2.chooseAction(positions)
+
+                self.updateState(player2_action)
+                win = self.winner()
+                if win is not GameState.UNDEFINED:
+                    if win == GameState.LOOSE:
+                        print(self.player2.name, "wins!")
+                    else:
+                        print("tie!")
+                    self.reset()
+                    break
+
+    def showBoard(self):
+        for i in range(0, BOARD_ROWS):
+            print('-------------')
+            out = '| '
+            for j in range(0, BOARD_COLS):
+                if self.board[i, j] == CellState.X_Value:
+                    token = 'x'
+                if self.board[i, j] == CellState.O_Value:
+                    token = 'o'
+                if self.board[i, j] == CellState.empty_Value:
+                    token = ' '
+                out += token + ' | '
+            print(out)
+        print('-------------')
 
 
 if __name__ == '__main__':
-    gameHandler = GameHandler()
-    gameHandler.process()
+    print("Tic Tac Toe!")
 
+    training = False
+
+    if training:
+        """Training Mode"""
+        for _ in range(100):
+            player1 = ArtificialPlayer("U-0318", CellState.X_Value)
+            player2 = ArtificialPlayer("U-0314", CellState.O_Value)
+
+            # If the file exists, upload it
+            my_file = Path("Files/policy_U-0318")
+            if my_file.is_file():
+                player1.loadPolicy("Files/policy_U-0318")
+            # If the file exists, upload it
+            my_file = Path("Files/policy_U-0314")
+            if my_file.is_file():
+                player2.loadPolicy("Files/policy_U-0314")
+
+            game = Game(player1, player2)
+
+            print("Training...")
+            game.play(50)
+
+            # Save the configuration
+            player1.savePolicy()
+            player2.savePolicy()
+
+            """
+
+            player1 = ArtificialPlayer("ArtificialSlave", CellState.X_Value)
+            player2 = ArtificialPlayer("ArtificialMaster", CellState.O_Value)
+
+            # If the file exists, upload it
+            my_file = Path("Files/policy_ArtificialMaster")
+            if my_file.is_file():
+                player2.loadPolicy("Files/policy_ArtificialMaster")
+
+            game = Game(player1, player2)
+
+            print("Training...")
+            game.play(50)
+
+            # Save the configuration
+            player2.savePolicy()
+            """
+    else:
+        """With Human Player Mode"""
+        name = input("Insert your name: ")
+        print("Starting the game...")
+
+        if rand() < 0.5:
+            player1 = ArtificialPlayer("U-0318" , CellState.X_Value , 0)
+            player2 = HumanPlayer(name , CellState.O_Value)
+            player1.loadPolicy("Files/policy_U-0318")
+            print("Your symbol is: " + str(player2.symbol))
+        else:
+            player1 = HumanPlayer(name, CellState.X_Value)
+            player2 = ArtificialPlayer("U-0314" , CellState.O_Value , 0)
+            player2.loadPolicy("Files/policy_U-0314")
+            print("Your symbol is: " + str(player1.symbol))
+
+        game = Game(player1 , player2)
+        game.play()
+
+        # Save the result of the game with the human player
+        if type(player1) == ArtificialPlayer:
+            player1.savePolicy()
+        else:
+            player2.savePolicy()
 
