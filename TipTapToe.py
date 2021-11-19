@@ -106,7 +106,7 @@ class Game:
             self.player2.feedReward(5)
         else:
             self.player1.feedReward(-0.5)
-            self.player2.feedReward(1)
+            self.player2.feedReward(0.5)
 
     def reset(self):
         self.board = np.zeros((BOARD_ROWS , BOARD_COLS))
@@ -191,49 +191,30 @@ if __name__ == '__main__':
     print("Tic Tac Toe!")
 
     training = False
+    numberOfGames = 10000
 
     if training:
         """Training Mode"""
-        for _ in range(100):
-            player1 = ArtificialPlayer("U-0318", CellState.X_Value)
-            player2 = ArtificialPlayer("U-0314", CellState.O_Value)
+        player1 = ArtificialPlayer("U-0318", CellState.X_Value)
+        player2 = ArtificialPlayer("U-0314", CellState.O_Value)
 
-            # If the file exists, upload it
-            my_file = Path("Files/policy_U-0318")
-            if my_file.is_file():
-                player1.loadPolicy("Files/policy_U-0318")
-            # If the file exists, upload it
-            my_file = Path("Files/policy_U-0314")
-            if my_file.is_file():
-                player2.loadPolicy("Files/policy_U-0314")
+        # If the file exists, upload it
+        my_file = Path("Files/policy_U-0318")
+        if my_file.is_file():
+            player1.loadPolicy("Files/policy_U-0318")
+        # If the file exists, upload it
+        my_file = Path("Files/policy_U-0314")
+        if my_file.is_file():
+            player2.loadPolicy("Files/policy_U-0314")
 
-            game = Game(player1, player2)
+        game = Game(player1, player2)
 
-            print("Training...")
-            game.play(50)
+        print("Training...")
+        game.play(numberOfGames)
 
-            # Save the configuration
-            player1.savePolicy()
-            player2.savePolicy()
-
-            """
-
-            player1 = ArtificialPlayer("ArtificialSlave", CellState.X_Value)
-            player2 = ArtificialPlayer("ArtificialMaster", CellState.O_Value)
-
-            # If the file exists, upload it
-            my_file = Path("Files/policy_ArtificialMaster")
-            if my_file.is_file():
-                player2.loadPolicy("Files/policy_ArtificialMaster")
-
-            game = Game(player1, player2)
-
-            print("Training...")
-            game.play(50)
-
-            # Save the configuration
-            player2.savePolicy()
-            """
+        # Save the configuration
+        player1.savePolicy()
+        player2.savePolicy()
     else:
         """With Human Player Mode"""
         name = input("Insert your name: ")

@@ -44,20 +44,20 @@ class ArtificialPlayer(Player):
         return boardHash
 
     def chooseAction(self , positions , board):
-        if np.random.uniform(0 , 1) <= self.exp_rate:
-            # Take a random action
-            if (1 , 1) in positions:
-                action = (1 , 1)
-                return action
+        print("In choose action")
+        if np.random.uniform(0 , 1) < self.exp_rate:
             idx = np.random.choice(len(positions))
             action = positions[idx]
         else:
+            # If start action, choose the best one
             if (1 , 1) in positions:
                 action = (1 , 1)
                 return action
             valueMax = -999
             action = None
+            print("Before for")
             for p in positions:
+                print("In for")
                 # Make a copy of the board
                 next_board = board.copy()
                 # Add the symbol in a possible position
