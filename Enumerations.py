@@ -10,7 +10,7 @@ from enum import IntEnum
 
 class CellState(IntEnum):
     """
-    State of the node cell
+    State of the board cell
     O_Value -> O
     X_Value -> X
     empty_Value -> empty cell
@@ -23,8 +23,8 @@ class CellState(IntEnum):
 class GameState(IntEnum):
     """
     State of the game
-    WIN -> if the algorithm won
-    LOOSE -> if the algorithm lose
+    WIN -> if the first player won
+    LOOSE -> if the first player lose
     DRAW -> if the game ended but nobody won
     UNDEFINED -> if the game is still open
     """
@@ -32,3 +32,4 @@ class GameState(IntEnum):
     LOOSE = 1,
     DRAW = 2,
     UNDEFINED = 3
+    
