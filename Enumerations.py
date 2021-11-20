@@ -1,5 +1,5 @@
 """
-Date: 18/11/2021
+Date: 20/11/2021
 Author: Matteo Nunziante
 
 Description: Enums for Tip Tap Toe game
@@ -32,4 +32,3 @@ class GameState(IntEnum):
     LOOSE = 1,
     DRAW = 2,
     UNDEFINED = 3
-    
