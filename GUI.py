@@ -4,74 +4,300 @@ Author: Matteo Nunziante
 
 Description: GUI for Tip Tap Toe game
 """
+from pathlib import Path
 
-import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, StringVar, OptionMenu, END, Message, Frame
+from PIL import Image
+
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path("./Files/Images")
+
+
+def relative_to_assets(path: str) -> Path:
+    """
+    Method that rebuilds the path of all the pictures
+    :param path: picture name
+    :return: complete path
+    """
+    return ASSETS_PATH / Path(path)
 
 
 class GUI:
     def __init__(self):
         # Create the main window
-        self.mainWindow = tk.Tk()
+        self.mainWindow = Tk()
         # Set the title
-        self.mainWindow.title = 'Tip Tap Toe Game'
-        # Set the size of the window
-        self.mainWindow.geometry("400x200")
-        # Add widgets
-        # Add a label
-        self.label = tk.Label(self.mainWindow , text = "Click the button to increase the count!")
-        # Add a button: window , text, callBack function
-        self.button = tk.Button(self.mainWindow , text = "0" , command = self.randomFunction)
-        # Add a menu
-        self.menu = tk.Menu(self.mainWindow)
-        self.mainWindow.config(menu = self.menu)
-        self.fileMenu = tk.Menu(self.menu)
-        self.menu.add_cascade(label = "Menu" , menu = self.fileMenu)
-        self.fileMenu.add_command(label = "New game" , command = self.reset)
-        self.fileMenu.add_separator()
-        self.fileMenu.add_command(label = "Quit" , command = self.mainWindow.quit)
-        self.helpMenu = tk.Menu(self.menu)
-        self.menu.add_cascade(label = "Help" , menu = self.helpMenu)
-        self.helpMenu.add_command(label = "Info" , command = self.info)
-        # Add a message
-        self.message = tk.Message(self.mainWindow , text = "Limit reached (10)! Reset the game to play again!" ,
-                                  foreground = "red" , width = 300)
+        self.mainWindow.title('Tip Tap Toe Game')
+        # Take the position in the middle of the screen
+        screenPositionRight = int(self.mainWindow.winfo_screenwidth() / 2 - 700 / 2)
+        screenPositionDown = int(self.mainWindow.winfo_screenheight() / 2 - 500 / 2)
+        # Set the size of the window and its position
+        self.mainWindow.geometry("550x550" + "+{}+{}".format(screenPositionRight, screenPositionDown))
 
-        # Prepare the temporary button and label to be shown when the user select 'Help'
-        self.temporaryLabel = tk.Label(self.mainWindow , text = "Go to 'Menu -> New game' to start a new game of "
-                                                                "Tip Tap Toe!")
-        self.temporaryButton = tk.Button(self.mainWindow , text = "Back" , command = self.back)
+        # Create the workspace
+        self.canvas = Canvas(
+            self.mainWindow,
+            height = 550,
+            width = 550,
+            bd = 0,
+            bg="#FAF8F5",
+            highlightthickness = 0,
+            relief = "ridge"
+        )
+        self.canvas.place(
+            x = 0 ,
+            y = 0
+        )
 
-        # Show the main widgets
-        self.label.pack()  # To show the label
-        self.button.pack()  # To show the button
+        # List of elements in the page
+        self.elementsInThePage = []
+
+        # Variable that contains the error, if there is one
+        self.error = None
+
+        # Initialize the starting page
+        self.init_starting_page()
+
+    def showError(self):
+        """
+        Method that shows the error
+        :return: nothing
+        """
+        errorMessage = Message(
+            self.mainWindow ,
+            text = self.error ,
+            width = 200,
+            foreground = "red"
+        )
+        errorMessage.place(
+            x = 225 ,
+            y = 475
+        )
+        self.elementsInThePage.append(errorMessage)
+
+    def init_starting_page(self):
+        """
+        Method that inits the starting page
+        :return: nothing
+        """
+
+        if self.error is not None:
+            self.showError()
+
+        welcomeMessage = Message(
+            self.mainWindow ,
+            text = "Welcome in Tip Tap Toe Game!" ,
+            width = 200
+        )
+        welcomeMessage.place(
+            x = 180 ,
+            y = 30
+        )
+
+        self.elementsInThePage.append(welcomeMessage)
+
+        # Create the image of the starting phase
+        image = PhotoImage(
+            file = relative_to_assets("tris_image.png")
+        )
+
+        self.canvas.create_image(
+            120 ,
+            90 ,
+            image = image ,
+            anchor = "nw"
+        )
+
+        # Create the entry for the player's name under the image
+        nameMessage = Message(
+            self.mainWindow ,
+            width = 50 ,
+            text = "Name:"
+        )
+        nameMessage.place(
+            x = 190 ,
+            y = 450
+        )
+
+        self.elementsInThePage.append(nameMessage)
+
+        nameEntry = Entry(
+            bd = 0,
+            bg = "#ffffff",
+            highlightthickness = 0
+        )
+        nameEntry.place(
+            x = 270 ,
+            y = 450 ,
+            width = 91.0 ,
+            height = 17.0
+        )
+
+        self.elementsInThePage.append(nameEntry)
+
+        # Add the start game button
+        startGame_button = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            text = "Start Game" ,
+            command = lambda: self.startGame(nameEntry) ,
+            relief = "flat"
+        )
+        startGame_button.place(
+            x = 220 ,
+            y = 500 ,
+            width = 114 ,
+            height = 30
+        )
+
+        self.elementsInThePage.append(startGame_button)
+
         self.mainWindow.mainloop()
 
-    def randomFunction(self):
-        num = int(self.button['text'])
-        if num == 10:
-            self.message.pack()
+    def startGame(self , nameEntry):
+        """
+        Method called clicking on startGame_button in the starting page
+        If the user inserted the name, the game will start , otherwise show the error
+        :return: nothing
+        """
+        # Get the name inserted before deleting the elements
+        name = nameEntry.get()
+
+        # Delete elements in the current page
+        self.canvas.delete("all")
+        for el in self.elementsInThePage:
+            el.destroy()
+
+        # Check if the name is valid, otherwise show an error
+        if name is None or not name:
+            self.error = "Insert your name!"
+            self.init_starting_page()
             return
-        self.button['text'] = str(num + 1)
+        self.error = None
+        print("Name inserted: " , name)
 
-    def reset(self):
-        self.button['text'] = str(0)
-        self.message.pack_forget()
+        # Create the game board
+        self.printInitialBoard()
 
-    def info(self):
-        # Hide the main widgets
-        self.label.pack_forget()
-        self.button.pack_forget()
-        # Show the help label and button
-        self.temporaryLabel.pack()
-        self.temporaryButton.pack()
+    def printInitialBoard(self , player1 = None , player2 = None):
 
-    def back(self):
-        # Hide the help label and button
-        self.temporaryLabel.pack_forget()
-        self.temporaryButton.pack_forget()
-        # Show the main widgets
-        self.label.pack()
-        self.button.pack()
+        cell00 = Button(
+            borderwidth = 70 ,
+            highlightthickness = 3,
+            relief = "flat"
+        )
+        cell00.place(
+            x = 220 ,
+            y = 150 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell00)
+
+        cell01 = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            relief = "flat"
+        )
+        cell01.place(
+            x = 270 ,
+            y = 150 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell01)
+
+        cell02 = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            relief = "flat"
+        )
+        cell02.place(
+            x = 320 ,
+            y = 150 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell02)
+
+        cell10 = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            relief = "flat"
+        )
+        cell10.place(
+            x = 220 ,
+            y = 197 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell10)
+
+        cell11 = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            relief = "flat"
+        )
+        cell11.place(
+            x = 270 ,
+            y = 197 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell11)
+
+        cell12 = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            relief = "flat"
+        )
+        cell12.place(
+            x = 320 ,
+            y = 197 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell12)
+
+        cell20 = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            relief = "flat"
+        )
+        cell20.place(
+            x = 220 ,
+            y = 244 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell20)
+
+        cell21 = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            relief = "flat"
+        )
+        cell21.place(
+            x = 270 ,
+            y = 244 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell21)
+
+        cell22 = Button(
+            borderwidth = 100 ,
+            highlightthickness = 0 ,
+            relief = "flat"
+        )
+        cell22.place(
+            x = 320 ,
+            y = 244 ,
+            width = 50 ,
+            height = 47
+        )
+        self.elementsInThePage.append(cell22)
 
 
 if __name__ == '__main__':
