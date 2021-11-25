@@ -1,9 +1,14 @@
 """
-Date: 20/11/2021
+Date: 25/11/2021
 Author: Matteo Nunziante
 
-Description: Player for Tip Tap Toe game
+Description: Tip Tap Toe game
+
+Example of reinforcement learning applied to a game:
+    -> it's possible to train 2 players (one that start first and one that start for second)
+    -> the training can be between the 2 artificial player and also during the game with a human player
 """
+
 import pickle
 from pathlib import Path
 
@@ -19,6 +24,14 @@ class Player:
         """
         self.name = name
         self.symbol = symbol
+
+    def setName(self , name):
+        """
+        Set the name of the player
+        :param name: the name of the player
+        :return: nothing
+        """
+        self.name = name
 
     def addState(self, state):
         pass
@@ -68,6 +81,7 @@ class ArtificialPlayer(Player):
         :return: a tuple containing the coordinates of the board on which do the action (add the symbol of the player)
         """
         if np.random.uniform(0, 1) < self.exp_rate:
+            # Take a random action
             idx = np.random.choice(len(positions))
             action = positions[idx]
         else:
@@ -75,6 +89,7 @@ class ArtificialPlayer(Player):
             if (1, 1) in positions:
                 action = (1, 1)
                 return action
+            # Evaluating what the player learned until now
             valueMax = -999
             action = None
             for p in positions:
@@ -90,7 +105,7 @@ class ArtificialPlayer(Player):
                 if value >= valueMax:
                     valueMax = value
                     action = p
-        print("{} takes action {}".format(self.name, action))
+        # print("{} takes action {}".format(self.name, action))
         return action
 
     def addState(self, state):
@@ -172,11 +187,3 @@ class HumanPlayer(Player):
             action = (row, col)
             if action in positions:
                 return action
-
-    def reset(self):
-        """
-        Method that resets the name and the symbol of the player
-        :return:
-        """
-        self.name = None
-        self.symbol = None
