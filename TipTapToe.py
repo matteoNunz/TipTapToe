@@ -608,6 +608,14 @@ def exit_game():
     mainWindow.destroy()
 
 
+def on_quit():
+    """
+    Method called when the window is closed
+    :return: nothing
+    """
+    exit()
+
+
 if __name__ == '__main__':
 
     # Read the input arguments to decide if gui, cli or training (plus how many training game)
@@ -710,6 +718,9 @@ if __name__ == '__main__':
             menubar.add_cascade(label="File", menu=fileMenu)
             mainWindow.config(menu=menubar)
 
+            # Set the action in case of closure -> close the entire application
+            mainWindow.protocol("WM_DELETE_WINDOW", on_quit)
+
             # Start the GUI
             mainWindow.mainloop()
         else:
@@ -717,6 +728,7 @@ if __name__ == '__main__':
 
         # Start the game
         start_game()
+
 
         """
         Uncomment to train the algorithm when it's playing with you
@@ -726,3 +738,4 @@ if __name__ == '__main__':
         else:
             player2.savePolicy()
         """
+
